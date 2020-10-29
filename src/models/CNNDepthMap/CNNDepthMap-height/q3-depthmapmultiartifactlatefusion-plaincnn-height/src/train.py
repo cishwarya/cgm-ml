@@ -179,11 +179,10 @@ training_callbacks = [
 ]
 
 n_steps = len(paths_training) / CONFIG.BATCH_SIZE
-lr_schedule = tfa.optimizers.CyclicalLearningRate(
+lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
     initial_learning_rate=CONFIG.LEARNING_RATE / 100,
     maximal_learning_rate=CONFIG.LEARNING_RATE,
-    step_size=CONFIG.LEARNING_RATE,
-    scale_fn=lambda x: 1.,
+    step_size=n_steps,
 )
 optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule)
 
@@ -205,7 +204,7 @@ if CONFIG.EPOCHS_TUNE:
         layer.trainable = True
 
     # Adjust learning rate
-    optimizer = tf.keras.optimizers.Nadam(learning_rate=CONFIG.LEARNING_RATE_TUNE)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=CONFIG.LEARNING_RATE_TUNE)
     model.compile(optimizer=optimizer, loss="mse", metrics=["mae"])
 
     print("Start fine-tuning")
