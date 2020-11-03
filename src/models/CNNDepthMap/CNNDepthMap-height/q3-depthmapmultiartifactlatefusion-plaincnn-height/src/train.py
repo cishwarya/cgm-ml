@@ -184,7 +184,7 @@ lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
     maximal_learning_rate=CONFIG.LEARNING_RATE,
     step_size=n_steps,
 )
-optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule)
+optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 # Compile the model.
 model.compile(optimizer=optimizer, loss="mse", metrics=["mae"])

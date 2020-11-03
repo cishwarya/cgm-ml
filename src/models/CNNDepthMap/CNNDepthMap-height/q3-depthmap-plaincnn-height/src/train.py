@@ -6,6 +6,7 @@ import shutil
 
 import glob2 as glob
 import tensorflow as tf
+import tensorflow_addons as tfa
 from azureml.core import Experiment, Workspace
 from azureml.core.run import Run
 
@@ -202,7 +203,13 @@ training_callbacks = [
     checkpoint_callback,
 ]
 
-optimizer = tf.keras.optimizers.Nadam(learning_rate=CONFIG.LEARNING_RATE)
+n_steps = len(paths_training) / CONFIG.BATCH_SIZE
+lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
+    initial_learning_rate=CONFIG.LEARNING_RATE / 100,
+    maximal_learning_rate=CONFIG.LEARNING_RATE,
+    step_size=n_steps,
+)
+optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
 
 # Compile the model.
 model.compile(
