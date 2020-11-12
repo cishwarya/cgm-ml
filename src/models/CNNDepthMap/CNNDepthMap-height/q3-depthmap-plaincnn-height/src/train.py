@@ -6,7 +6,6 @@ import shutil
 
 import glob2 as glob
 import tensorflow as tf
-import tensorflow_addons as tfa
 from azureml.core import Experiment, Workspace
 from azureml.core.run import Run
 
@@ -31,7 +30,7 @@ if run.id.startswith("OfflineRun"):
 
 from model import create_cnn  # noqa: E402
 from tmp_model_util.preprocessing import preprocess_depthmap, preprocess_targets  # noqa: E402
-from tmp_model_util.utils import download_dataset, get_dataset_path, AzureLogCallback, create_tensorboard_callback  # noqa: E402
+from tmp_model_util.utils import download_dataset, get_dataset_path, AzureLogCallback, create_tensorboard_callback, get_optimizer  # noqa: E402
 
 # Make experiment reproducible
 tf.random.set_seed(CONFIG.SPLIT_SEED)
@@ -199,17 +198,9 @@ training_callbacks = [
     checkpoint_callback,
 ]
 
-if CONFIG.USE_ONE_CYCLE:
-    n_steps = len(paths_training) / CONFIG.BATCH_SIZE
-    lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
-        initial_learning_rate=CONFIG.LEARNING_RATE / 100,
-        maximal_learning_rate=CONFIG.LEARNING_RATE,
-        step_size=n_steps,
-    )
-    # Note: When using 1cycle, this uses the Adam (not Nadam) optimizer
-    optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
-else:
-    optimizer = tf.keras.optimizers.Nadam(learning_rate=CONFIG.LEARNING_RATE)
+optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
+                          lr=CONFIG.LEARNING_RATE,
+                          n_steps=len(paths_training) / CONFIG.BATCH_SIZE)
 
 # Compile the model.
 model.compile(
