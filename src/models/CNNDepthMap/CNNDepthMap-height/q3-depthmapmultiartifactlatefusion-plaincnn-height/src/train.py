@@ -178,13 +178,17 @@ training_callbacks = [
     checkpoint_callback,
 ]
 
-n_steps = len(paths_training) / CONFIG.BATCH_SIZE
-lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
-    initial_learning_rate=CONFIG.LEARNING_RATE / 100,
-    maximal_learning_rate=CONFIG.LEARNING_RATE,
-    step_size=n_steps,
-)
-optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+if CONFIG.USE_ONE_CYCLE:
+    n_steps = len(paths_training) / CONFIG.BATCH_SIZE
+    lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
+        initial_learning_rate=CONFIG.LEARNING_RATE / 100,
+        maximal_learning_rate=CONFIG.LEARNING_RATE,
+        step_size=n_steps,
+    )
+    # Note: When using 1cycle, this uses the Adam (not Nadam) optimizer
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+else:
+    optimizer = tf.keras.optimizers.Nadam(learning_rate=CONFIG.LEARNING_RATE)
 
 # Compile the model.
 model.compile(optimizer=optimizer, loss="mse", metrics=["mae"])
