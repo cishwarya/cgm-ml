@@ -1,3 +1,5 @@
+"""https://www.avanwyk.com/finding-a-learning-rate-in-tensorflow-2/"""
+
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
