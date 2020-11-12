@@ -1,7 +1,7 @@
 database:
     db_connection_file: 'dbconnection.json'
 scans:
-    scan_amount : 2000
+    scan_amount : 5000
 calibration:
     calibration_file: '../../common/depthmap_toolkit/camera_calibration.txt'
 data:

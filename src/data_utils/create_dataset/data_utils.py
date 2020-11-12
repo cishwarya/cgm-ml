@@ -49,7 +49,7 @@ class CollectQrcodes:
         """
         table_name = 'artifacts_with_target'
         columns = self.ml_connector.get_columns(table_name)
-        query = "select * from " + table_name +';' 
+        query = "select * from " + table_name +" where id like '%_version_5.0%';"
         database = self.ml_connector.execute(query, fetch_all=True)
         database = pd.DataFrame(database,columns= columns)
         database['qrcode'] = database.apply(extract_qrcode,axis=1)
@@ -174,7 +174,7 @@ class CollectQrcodes:
         scan_group_qrcode = data['qrcode'].values.tolist()
         for qrcode in scan_group_qrcode:
             select_statement = "select id from measure where type like 'v%' and id like '%version_5.0%' and qr_code = '{}';".format(qrcode)
-            id = main_connector.execute(select_statement, fetch_all=True)
+            id = self.ml_connector.execute(select_statement, fetch_all=True)
             if len(id) == 1:
                 final_training_qrcodes.append(qrcode)
             else:
@@ -183,7 +183,7 @@ class CollectQrcodes:
         for id in final_training_qrcodes:
             update_statement = "update measure set scan_group ='{}' where id = '{}';".format(scan_group,id)
             try:
-                main_connector.execute(update_statement)
+                self.ml_connector.execute(update_statement)
             except Exception as error:
                 logging.warning(error)
         return
