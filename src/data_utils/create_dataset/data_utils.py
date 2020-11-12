@@ -158,6 +158,38 @@ class CollectQrcodes:
         posenet_results = pd.merge(data,posenet[['id','json_value','confidence_value']],on='id',how='left')
         return posenet_results
 
+    def update_database(self,data,scan_group):
+        """
+        Update the dataabse with the qrcodes with assigned scan_group 
+
+        Args:
+            data (dataframe): Dataframe containing the qrcodes  used for dataset preparation.
+            scan_group(string): scan_group containing two option train and test.
+
+        Returns:
+            Database being updates with the scan_group  
+        """
+        final_training_qrcodes = []
+        ignored_training_qrcodes = []
+        scan_group_qrcode = data['qrcode'].values.tolist()
+        for qrcode in scan_group_qrcode:
+            select_statement = "select id from measure where type like 'v%' and id like '%version_5.0%' and qr_code = '{}';".format(qrcode)
+            id = main_connector.execute(select_statement, fetch_all=True)
+            if len(id) == 1:
+                final_training_qrcodes.append(qrcode)
+            else:
+                ignored_training_qrcodes.append(qrcode)
+
+        for id in final_training_qrcodes:
+            update_statement = "update measure set scan_group ='{}' where id = '{}';".format(scan_group,id)
+            try:
+                main_connector.execute(update_statement)
+            except Exception as error:
+                logging.warning(error)
+        return
+
+
+
 
 ## convert pointcloud to depthmaps
 def lenovo_pcd2depth(pcd,calibration):
