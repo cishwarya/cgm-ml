@@ -1,4 +1,4 @@
-"""https://www.avanwyk.com/finding-a-learning-rate-in-tensorflow-2/"""
+"""The code in this file was copied from: https://www.avanwyk.com/finding-a-learning-rate-in-tensorflow-2/"""
 
 import matplotlib.pyplot as plt
 import tensorflow as tf
