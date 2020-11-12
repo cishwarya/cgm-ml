@@ -20,6 +20,7 @@ CONFIG = dotdict(dict(
     SHUFFLE_BUFFER_SIZE=2560,
     NORMALIZATION_VALUE=7.5,
     LEARNING_RATE=0.0007,
+    USE_ONE_CYCLE=True,
 
     # Parameters for dataset generation.
     TARGET_INDEXES=[0],  # 0 is height, 1 is weight.

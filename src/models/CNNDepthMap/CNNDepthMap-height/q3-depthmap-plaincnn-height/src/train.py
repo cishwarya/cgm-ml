@@ -40,9 +40,6 @@ random.seed(CONFIG.SPLIT_SEED)
 DATA_DIR = REPO_DIR / 'data' if run.id.startswith("OfflineRun") else Path(".")
 print(f"DATA_DIR: {DATA_DIR}")
 
-DATA_DIR = REPO_DIR / 'data' if run.id.startswith("OfflineRun") else Path(".")
-print(f"DATA_DIR: {DATA_DIR}")
-
 # Offline run. Download the sample dataset and run locally. Still push results to Azure.
 if run.id.startswith("OfflineRun"):
     print("Running in offline mode...")
@@ -190,7 +187,6 @@ model = create_cnn(input_shape, dropout=True)
 model.summary()
 
 best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
-
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=best_model_path,
     monitor="val_loss",
@@ -203,13 +199,17 @@ training_callbacks = [
     checkpoint_callback,
 ]
 
-n_steps = len(paths_training) / CONFIG.BATCH_SIZE
-lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
-    initial_learning_rate=CONFIG.LEARNING_RATE / 100,
-    maximal_learning_rate=CONFIG.LEARNING_RATE,
-    step_size=n_steps,
-)
-optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+if CONFIG.USE_ONE_CYCLE:
+    n_steps = len(paths_training) / CONFIG.BATCH_SIZE
+    lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
+        initial_learning_rate=CONFIG.LEARNING_RATE / 100,
+        maximal_learning_rate=CONFIG.LEARNING_RATE,
+        step_size=n_steps,
+    )
+    # Note: When using 1cycle, this uses the Adam (not Nadam) optimizer
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+else:
+    optimizer = tf.keras.optimizers.Nadam(learning_rate=CONFIG.LEARNING_RATE)
 
 # Compile the model.
 model.compile(
