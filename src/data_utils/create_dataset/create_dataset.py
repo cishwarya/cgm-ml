@@ -1,5 +1,7 @@
 import sys
 sys.path.append('.')
+sys.path.append('../../common/depthmap_toolkit/')
+import pcd2depth
 import dbutils
 import pandas as pd
 # import utils
@@ -17,6 +19,7 @@ from data_utils import CollectQrcodes,lenovo_pcd2depth
 from pyntcloud import PyntCloud
 import shutil
 import utils
+
 
 
 ## Load the yaml file
@@ -52,7 +55,7 @@ scangroup_data = dataset.get_scangroup_data(data=data,scangroup=scangroup)
 scangroup_qrcodes = dataset.get_unique_qrcode(scangroup_data)
 new_scangroup_data = dataset.get_usable_data(dataframe=scangroup_qrcodes,amount=number_of_scans,scan_group=scangroup)
 
-#new_scangroup_data = new_scangroup_data[new_scangroup_data['tag'] != 'delete'] 
+#new_scangroup_data = new_scangroup_data[new_scangroup_data['tag'] != 'delete']  #TODO: check for delete tag presence and remove those rows
 
 full_dataset = dataset.merge_qrcode_dataset(new_scangroup_data,scangroup_data)
 
@@ -82,7 +85,7 @@ def process_data(rows):
     qrcode = rows['qrcode']
     # qrcode = rows['storage_path'].split('/')[1]
     pcdfile = rows['storage_path'].split('/')[-1]
-    depthmaps = lenovo_pcd2depth(source_path,calibration)
+    depthmaps = pcd2depth.process(calibration,source_path)
     max_value = depthmaps.max()
     if max_value > 10:
        logging.warning(pcdfile)

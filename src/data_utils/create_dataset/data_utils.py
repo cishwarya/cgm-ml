@@ -102,10 +102,10 @@ class CollectQrcodes:
 
     def merge_qrcode_dataset(self,qrcodes,dataset):
         """
-
+        Merge the qrcodes dataframe  and whole database dataframe
         Args:
-            qrcodes ([type]): [description]
-            dataset ([type]): [description]
+            qrcodes (dataframe): dataframe containing unique qrcodes
+            dataset (dataframe): dataframe containing all the data from the database 
         """
         qrcodes = qrcodes['qrcode']
         full_dataset = pd.merge(qrcodes,dataset,on='qrcode',how='left')
@@ -187,30 +187,3 @@ class CollectQrcodes:
             except Exception as error:
                 logging.warning(error)
         return
-
-
-
-
-## convert pointcloud to depthmaps
-def lenovo_pcd2depth(pcd,calibration):
-    """[summary]
-
-    Args:
-        pcd ([type]): [description]
-        calibration ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    points = utils.parsePCD(pcd)
-    width = utils.getWidth()
-    height = utils.getHeight()
-    output = np.zeros((width, height, 1))
-    for p in points:
-        v = utils.convert3Dto2D(calibration[1], p[0], p[1], p[2])
-        x = round(width - v[0] - 1)
-        y = round(v[1])
-        y = round(height - v[1] - 1)
-        if x >= 0 and y >= 0 and x < width and y < height:
-            output[x][y] = p[2]        
-    return output 

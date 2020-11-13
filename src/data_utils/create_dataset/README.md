@@ -17,13 +17,23 @@ In the future we plan to not support PCD files anymore (due to their big size).
 - `source_path` : Source path from where the utility will get the data to process
 - `target_path`: Target paths to storte the prepared data.
 
-### Converting depthmaps into PCD data
+After setting the required configuration,simply run 
 
-* The convertor accepts only the data captured by cgm-scanner. The data could be captured by any ARCore device supporting ToF sensor. Converting could be done by following command:
+```
+python create_dataset.py
+```
 
-python convertdepth2pcd.py input
+## Converting depthmaps into PCD data
 
-* The input folder has to contain camera_calibration.txt file and subfolder depth containing one or more depthmap files.
-* The output will be stored in folder export.
+* Teh utility is using depthmap_toolkit to convert pointcloud data to depthmaps and they are stored in a pickle file along with many other labels.
+
+### TODO
+
+- [ ] Functionality to check the already processed qrcodes with non processed qrcodes  
+- [ ] Automate the data registering functionality in Azure environment
+- [ ] Embedd this fucntionality in the pipeline.
 
 
+## CAUTION:
+
+This toolkit only prepare the datasets. Please make sure to update the database from you end if you are using the datsets created by this toolkit. This toolkit does not ensure any update to the backend database for any operation perform on the prepared dataset 
