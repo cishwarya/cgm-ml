@@ -8,4 +8,4 @@ data:
     scangroup: 'test' 
 paths:
     source_path: '/mnt/bmzdata/cgminbmzprod_v5.0/'
-    target_path: 'dataset/'
+    target_path: 'evaluation/'
