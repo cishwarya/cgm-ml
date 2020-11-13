@@ -1,73 +1,34 @@
-import math
-
 import numpy as np
 
 
-def add(a, b):
-    return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
-
-
-def cross(a, b):
-    output = [0, 0, 0]
-    output[0] = a[1] * b[2] - a[2] * b[1]
-    output[1] = a[0] * b[2] - a[2] * b[0]
-    output[2] = a[0] * b[1] - a[1] * b[0]
-    return output
-
-
-def dot(a, b):
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-
-
-def normalize(a):
-    len = a[0] + a[1] + a[2]
-    if len == 0:
-        len = 1
-    return [a[0] / len, a[1] / len, a[2] / len]
-
-
-def sub(a, b):
-    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-
-
-def length(a, b):
-    diff = sub(a, b)
-    value = diff[0] * diff[0] + diff[1] * diff[1] + diff[2] * diff[2]
-    return math.sqrt(value)
-
-
-def quaternion_mult(q, r):
+def quaternion_mult(q: list, r: list) -> list:
+    """Multiplication of 2 quaternions"""
     return [r[0] * q[0] - r[1] * q[1] - r[2] * q[2] - r[3] * q[3],
             r[0] * q[1] + r[1] * q[0] - r[2] * q[3] + r[3] * q[2],
             r[0] * q[2] + r[1] * q[3] + r[2] * q[0] - r[3] * q[1],
             r[0] * q[3] - r[1] * q[2] + r[2] * q[1] + r[3] * q[0]]
 
 
-def point_rotation_by_quaternion(point, q):
+def point_rotation_by_quaternion(point: list, q: list) -> list:
+    """Apply rotation to point in 3D space"""
     r = [0] + point
     q_conj = [q[0], -q[1], -q[2], -q[3]]
     return quaternion_mult(quaternion_mult(q, r), q_conj)[1:]
 
-#convert point into 3D
 
-
-def convert2Dto3D(intrisics, x, y, z):
+def convert2Dto3D(intrisics: list, x: float, y: float, z: float) -> list:
+    """Convert point in pixels into point in meters"""
     fx = intrisics[0] * float(width)
     fy = intrisics[1] * float(height)
     cx = intrisics[2] * float(width)
     cy = intrisics[3] * float(height)
     tx = (x - cx) * z / fx
     ty = (y - cy) * z / fy
-    output = []
-    output.append(tx)
-    output.append(ty)
-    output.append(z)
-    return output
-
-#convert point into 3D oriented
+    return [tx, ty, z]
 
 
-def convert2Dto3DOriented(intrisics, x, y, z):
+def convert2Dto3DOriented(intrisics: list, x: float, y: float, z: float) -> list:
+    """Convert point in pixels into point in meters (applying rotation)"""
     res = convert2Dto3D(calibration[1], x, y, z)
     if res:
         try:
@@ -78,28 +39,24 @@ def convert2Dto3DOriented(intrisics, x, y, z):
             i = 0
     return res
 
-#convert point into 2D
 
-
-def convert3Dto2D(intrisics, x, y, z):
+def convert3Dto2D(intrisics: list, x: float, y: float, z: float) -> list:
+    """Convert point in meters into point in pixels"""
     fx = intrisics[0] * float(width)
     fy = intrisics[1] * float(height)
     cx = intrisics[2] * float(width)
     cy = intrisics[3] * float(height)
     tx = x * fx / z + cx
     ty = y * fy / z + cy
-    output = []
-    output.append(tx)
-    output.append(ty)
-    output.append(z)
-    return output
+    return [tx, ty, z]
 
-#write obj
 
-#triangulate=True generates OBJ of type mesh
-#triangulate=False generates OBJ of type pointcloud
 def exportOBJ(filename, triangulate):
+    """
 
+    triangulate=True generates OBJ of type mesh
+    triangulate=False generates OBJ of type pointcloud
+    """
     count = 0
     indices = np.zeros((width, height))
     with open(filename, 'w') as file:
@@ -136,8 +93,6 @@ def exportOBJ(filename, triangulate):
                             file.write('f ' + str(int(indices[x + 1][y + 1])) + ' ' + str(int(indices[x + 1][y])) + ' ' + str(int(indices[x][y + 1])) + '\n')
         print('Pointcloud exported into ' + filename)
 
-#write pcd
-
 
 def exportPCD(filename):
     with open(filename, 'w') as file:
@@ -164,8 +119,6 @@ def exportPCD(filename):
                                    + str(res[2]) + ' ' + str(parseConfidence(x, y)) + '\n')
         print('Pointcloud exported into ' + filename)
 
-#get valid points in depthmaps
-
 
 def getCount():
     count = 0
@@ -178,22 +131,9 @@ def getCount():
                     count = count + 1
     return count
 
-#getter
-
-
-def getWidth():
-    return width
-
-#getter
-
-
-def getHeight():
-    return height
-
-#parse calibration file
-
 
 def parseCalibration(filepath):
+    """Parse calibration file"""
     global calibration
     with open(filepath, 'r') as file:
         calibration = []
@@ -209,19 +149,17 @@ def parseCalibration(filepath):
         calibration[2][1] *= 8.0  # workaround for wrong calibration data
     return calibration
 
-#get confidence of the point in scale 0-1
-
 
 def parseConfidence(tx, ty):
-    return ord(data[(int(ty) * width + int(tx)) * 3 + 2]) / maxConfidence
-
-#parse depth data
+    """Get confidence of the point in scale 0-1"""
+    return data[(int(ty) * width + int(tx)) * 3 + 2] / maxConfidence
 
 
 def parseData(filename):
+    """Parse depth data"""
     global width, height, depthScale, maxConfidence, data, position, rotation
     with open('data', 'rb') as file:
-        line = str(file.readline())[:-1]
+        line = file.readline().decode().strip()
         header = line.split('_')
         res = header[0].split('x')
         width = int(res[0])
@@ -234,41 +172,22 @@ def parseData(filename):
         data = file.read()
         file.close()
 
-#get depth of the point in meters
-
 
 def parseDepth(tx, ty):
-    depth = ord(data[(int(ty) * width + int(tx)) * 3 + 0]) << 8
-    depth += ord(data[(int(ty) * width + int(tx)) * 3 + 1])
+    """Get depth of the point in meters"""
+    depth = data[(int(ty) * width + int(tx)) * 3 + 0] << 8
+    depth += data[(int(ty) * width + int(tx)) * 3 + 1]
     depth *= depthScale
     return depth
 
-#get smoothed depth of the point in meters
-
-
-def parseDepthSmoothed(tx, ty, s):
-    center = parseDepth(tx, ty)
-    count = 1
-    depth = center
-    for x in range(tx - s, tx + s):
-        for y in range(ty - s, ty + s):
-            value = parseDepth(x, y)
-            if abs(center - value) < 0.1:
-                depth = depth + value
-                count = count + 1
-    return depth / count
-
-#parse line of numbers
-
 
 def parseNumbers(line):
+    """Parse line of numbers"""
     output = []
     values = line.split(' ')
     for value in values:
         output.append(float(value))
     return output
-
-#parse PCD
 
 
 def parsePCD(filepath):
@@ -288,24 +207,27 @@ def parsePCD(filepath):
                 data.append(values)
     return data
 
-#parse line of values
-
 
 def parseValues(line):
+    """Parse line of values"""
     output = []
     values = line.split(' ')
     for value in values:
         output.append(value)
     return output
 
-#setter
+
+def getWidth():
+    return width
+
+
+def getHeight():
+    return height
 
 
 def setWidth(value):
     global width
     width = value
-
-#setter
 
 
 def setHeight(value):

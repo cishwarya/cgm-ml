@@ -7,6 +7,11 @@ vandelay-py.js
 logs/
 logs_*/
 tmp_train/
+src/common/depthmap_toolkit/data
+src/common/depthmap_toolkit/honor/
+src/common/depthmap_toolkit/output/
+src/common/depthmap_toolkit/export/
+tmp_model_util/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

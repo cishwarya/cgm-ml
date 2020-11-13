@@ -11,10 +11,13 @@ import depthmap
 import pcd2depth
 
 
+DEPTHMAP_DIR = None
+
+
 def convertAllPCDs(event):
-    input = 'export'
+    input_dir = 'export'
     pcd = []
-    for (dirpath, dirnames, filenames) in walk(input):
+    for _, _, filenames in walk(input_dir):
         pcd = filenames
     pcd.sort()
     try:
@@ -23,12 +26,10 @@ def convertAllPCDs(event):
         print('no previous data to delete')
     os.mkdir('output')
     os.mkdir('output/depth')
-    copyfile(input + '/../camera_calibration.txt', 'output/camera_calibration.txt')
+    copyfile(input_dir + '/../camera_calibration.txt', 'output/camera_calibration.txt')
     for i in range(len(pcd)):
-        pcd2depth.process(
-            input + '/../camera_calibration.txt',
-            input + '/' + pcd[i],
-            'output/depth/' + pcd[i] + '.depth')
+        depthmap = pcd2depth.process(input_dir + '/../camera_calibration.txt', input_dir + '/' + pcd[i])
+        pcd2depth.write_depthmap('output/depth/' + pcd[i] + '.depth', depthmap)
     print('Data exported into folder output')
 
 
@@ -46,7 +47,7 @@ def next(event):
     index = index + 1
     if (index == size):
         index = 0
-    show()
+    show(DEPTHMAP_DIR)
 
 
 def prev(event):
@@ -55,26 +56,16 @@ def prev(event):
     index = index - 1
     if (index == -1):
         index = size - 1
-    show()
+    show(DEPTHMAP_DIR)
 
 
-def swapEdges(event):
-    plt.close()
-    global edges
-    edges = 1 - edges
-    show()
-
-
-def show():
+def show(depthmap_dir):
     if rgb:
-        depthmap.process(plt, input, depth[index], rgb[index])
+        depthmap.process(plt, depthmap_dir, depth[index], rgb[index])
     else:
-        depthmap.process(plt, input, depth[index], 0)
+        depthmap.process(plt, depthmap_dir, depth[index], 0)
 
-    if edges == 1:
-        depthmap.showEdges()
-    else:
-        depthmap.showResult()
+    depthmap.showResult()
     ax = plt.gca()
     ax.text(0.5, 1.075, depth[index], horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
     bprev = Button(plt.axes([0.0, 0.0, 0.1, 0.075]), '<<', color='gray')
@@ -87,40 +78,35 @@ def show():
     bexportPCD.on_clicked(exportPCD)
     bconvertPCDs = Button(plt.axes([0.6, 0.0, 0.2, 0.05]), 'Convert all PCDs', color='gray')
     bconvertPCDs.on_clicked(convertAllPCDs)
-    if edges == 0:
-        bshowedges = Button(plt.axes([0.0, 0.94, 0.2, 0.05]), 'Show edges', color='gray')
-        bshowedges.on_clicked(swapEdges)
-    else:
-        bshowedges = Button(plt.axes([0.0, 0.94, 0.2, 0.05]), 'Hide edges', color='gray')
-        bshowedges.on_clicked(swapEdges)
     plt.show()
 
 
-#prepare
-if len(sys.argv) != 2:
-    print('You did not enter input folder')
-    print('E.g.: python toolkit.py honor')
-    sys.exit(1)
+if __name__ == "__main__":
+    # Prepare
+    if len(sys.argv) != 2:
+        print('You did not enter depthmap_dir folder')
+        print('E.g.: python toolkit.py depthmap_dir')
+        sys.exit(1)
 
-input = sys.argv[1]
-depth = []
-rgb = []
-for (dirpath, dirnames, filenames) in walk(input + '/depth'):
-    depth = filenames
-for (dirpath, dirnames, filenames) in walk(input + '/rgb'):
-    rgb = filenames
-depth.sort()
-rgb.sort()
+    depthmap_dir = sys.argv[1]
+    DEPTHMAP_DIR = depthmap_dir
+    depth = []
+    rgb = []
+    for (dirpath, dirnames, filenames) in walk(depthmap_dir + '/depth'):
+        depth = filenames
+    for (dirpath, dirnames, filenames) in walk(depthmap_dir + '/rgb'):
+        rgb = filenames
+    depth.sort()
+    rgb.sort()
 
-#make sure there is a new export folder
-try:
-    shutil.rmtree('export')
-except BaseException:
-    print('no previous data to delete')
-os.mkdir('export')
+    # Make sure there is a new export folder
+    try:
+        shutil.rmtree('export')
+    except BaseException:
+        print('no previous data to delete')
+    os.mkdir('export')
 
-#show viewer
-edges = 0
-index = 0
-size = len(depth)
-show()
+    # Show viewer
+    index = 0
+    size = len(depth)
+    show(depthmap_dir)

@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 import random
+import shutil
 
 import glob2 as glob
 import tensorflow as tf
@@ -11,15 +12,31 @@ from tensorflow.keras import callbacks, layers, models
 from config import CONFIG, DATASET_MODE_DOWNLOAD, DATASET_MODE_MOUNT
 from constants import DATA_DIR_ONLINE_RUN, MODEL_CKPT_FILENAME, REPO_DIR
 from model import create_head, get_base_model
-from preprocessing import create_samples, tf_load_pickle, tf_augment_sample
-from utils import download_dataset, get_dataset_path, AzureLogCallback, create_tensorboard_callback
+from augmentation import tf_augment_sample
+from preprocessing_multiartifact import tf_load_pickle
+
+# Get the current run.
+run = Run.get_context()
+
+if run.id.startswith("OfflineRun"):
+    utils_dir_path = REPO_DIR / "src/common/model_utils"
+    utils_paths = glob.glob(os.path.join(utils_dir_path, "*.py"))
+    temp_model_util_dir = Path(__file__).parent / "tmp_model_util"
+    # Remove old temp_path
+    if os.path.exists(temp_model_util_dir):
+        shutil.rmtree(temp_model_util_dir)
+    # Copy
+    os.mkdir(temp_model_util_dir)
+    os.system(f'touch {temp_model_util_dir}/__init__.py')
+    for p in utils_paths:
+        shutil.copy(p, temp_model_util_dir)
+
+from tmp_model_util.preprocessing import create_samples  # noqa: E402
+from tmp_model_util.utils import download_dataset, get_dataset_path, AzureLogCallback, create_tensorboard_callback  # noqa: E402
 
 # Make experiment reproducible
 tf.random.set_seed(CONFIG.SPLIT_SEED)
 random.seed(CONFIG.SPLIT_SEED)
-
-# Get the current run.
-run = Run.get_context()
 
 DATA_DIR = REPO_DIR / 'data' if run.id.startswith("OfflineRun") else Path(".")
 print(f"DATA_DIR: {DATA_DIR}")
@@ -85,10 +102,10 @@ print(len(qrcode_paths_validate))
 
 assert len(qrcode_paths_training) > 0 and len(qrcode_paths_validate) > 0
 
-paths_training = create_samples(qrcode_paths_training)
+paths_training = create_samples(qrcode_paths_training, CONFIG)
 print(f"Samples for training: {len(paths_training)}")
 
-paths_validate = create_samples(qrcode_paths_validate)
+paths_validate = create_samples(qrcode_paths_validate, CONFIG)
 print(f"Samples for validate: {len(paths_validate)}")
 
 # Create dataset for training.
@@ -157,7 +174,7 @@ checkpoint_callback = callbacks.ModelCheckpoint(
 training_callbacks = [
     AzureLogCallback(run),
     create_tensorboard_callback(),
-    checkpoint_callback
+    checkpoint_callback,
 ]
 
 optimizer = tf.keras.optimizers.Nadam(learning_rate=CONFIG.LEARNING_RATE)

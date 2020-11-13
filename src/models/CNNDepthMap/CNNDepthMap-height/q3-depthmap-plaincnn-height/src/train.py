@@ -1,27 +1,46 @@
+from pathlib import Path
 import os
 import pickle
 import random
+import shutil
 
 import glob2 as glob
 import tensorflow as tf
 from azureml.core import Experiment, Workspace
 from azureml.core.run import Run
-from tensorflow.keras import callbacks
 
-from config import CONFIG
-from constants import REPO_DIR
-from model import create_cnn
-from preprocessing import preprocess_depthmap, preprocess_targets
+from config import CONFIG, DATASET_MODE_DOWNLOAD, DATASET_MODE_MOUNT
+from constants import DATA_DIR_ONLINE_RUN, MODEL_CKPT_FILENAME, REPO_DIR
+
+# Get the current run.
+run = Run.get_context()
+
+if run.id.startswith("OfflineRun"):
+    utils_dir_path = REPO_DIR / "src/common/model_utils"
+    utils_paths = glob.glob(os.path.join(utils_dir_path, "*.py"))
+    temp_model_util_dir = Path(__file__).parent / "tmp_model_util"
+    # Remove old temp_path
+    if os.path.exists(temp_model_util_dir):
+        shutil.rmtree(temp_model_util_dir)
+    # Copy
+    os.mkdir(temp_model_util_dir)
+    os.system(f'touch {temp_model_util_dir}/__init__.py')
+    for p in utils_paths:
+        shutil.copy(p, temp_model_util_dir)
+
+from model import create_cnn  # noqa: E402
+from tmp_model_util.preprocessing import preprocess_depthmap, preprocess_targets  # noqa: E402
+from tmp_model_util.utils import download_dataset, get_dataset_path, AzureLogCallback, create_tensorboard_callback  # noqa: E402
 
 # Make experiment reproducible
 tf.random.set_seed(CONFIG.SPLIT_SEED)
 random.seed(CONFIG.SPLIT_SEED)
 
-# Get the current run.
-run = Run.get_context()
+DATA_DIR = REPO_DIR / 'data' if run.id.startswith("OfflineRun") else Path(".")
+print(f"DATA_DIR: {DATA_DIR}")
 
 # Offline run. Download the sample dataset and run locally. Still push results to Azure.
-if(run.id.startswith("OfflineRun")):
+if run.id.startswith("OfflineRun"):
     print("Running in offline mode...")
 
     # Access workspace.
@@ -30,20 +49,26 @@ if(run.id.startswith("OfflineRun")):
     experiment = Experiment(workspace, "training-junkyard")
     run = experiment.start_logging(outputs=None, snapshot_directory=None)
 
-    # Get dataset.
-    print("Accessing dataset...")
-    dataset_name = "anon-depthmap-mini"
-    dataset_path = str(REPO_DIR / "data" / dataset_name)
-    if not os.path.exists(dataset_path):
-        dataset = workspace.datasets[dataset_name]
-        dataset.download(target_path=dataset_path, overwrite=False)
+    dataset_name = CONFIG.DATASET_NAME_LOCAL
+    dataset_path = get_dataset_path(DATA_DIR, dataset_name)
+    download_dataset(workspace, dataset_name, dataset_path)
 
 # Online run. Use dataset provided by training notebook.
 else:
     print("Running in online mode...")
     experiment = run.experiment
     workspace = experiment.workspace
-    dataset_path = run.input_datasets["dataset"]
+
+    dataset_name = CONFIG.DATASET_NAME
+
+    # Mount or download
+    if CONFIG.DATASET_MODE == DATASET_MODE_MOUNT:
+        dataset_path = run.input_datasets["dataset"]
+    elif CONFIG.DATASET_MODE == DATASET_MODE_DOWNLOAD:
+        dataset_path = get_dataset_path(DATA_DIR_ONLINE_RUN, dataset_name)
+        download_dataset(workspace, dataset_name, dataset_path)
+    else:
+        raise NameError(f"Unknown DATASET_MODE: {CONFIG.DATASET_MODE}")
 
 # Get the QR-code paths.
 dataset_path = os.path.join(dataset_path, "scans")
@@ -160,45 +185,18 @@ input_shape = (CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
 model = create_cnn(input_shape, dropout=True)
 model.summary()
 
-
-# Get ready to add callbacks.
-training_callbacks = []
-
-# Pushes metrics and losses into the run on AzureML.
-class AzureLogCallback(callbacks.Callback):
-    def on_epoch_end(self, epoch, logs=None):
-        if logs is not None:
-            for key, value in logs.items():
-                run.log(key, value)
-
-
-training_callbacks.append(AzureLogCallback())
-
-
-# Add TensorBoard callback.
-tensorboard_callback = tf.keras.callbacks.TensorBoard(
-    log_dir="logs",
-    histogram_freq=0,
-    write_graph=True,
-    write_grads=False,
-    write_images=True,
-    embeddings_freq=0,
-    embeddings_layer_names=None,
-    embeddings_metadata=None,
-    embeddings_data=None,
-    update_freq="epoch"
-)
-training_callbacks.append(tensorboard_callback)
-
-# Add checkpoint callback.
-best_model_path = str(REPO_DIR / 'data/outputs/best_model.h5')
+best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=best_model_path,
     monitor="val_loss",
     save_best_only=True,
     verbose=1
 )
-training_callbacks.append(checkpoint_callback)
+training_callbacks = [
+    AzureLogCallback(run),
+    create_tensorboard_callback(),
+    checkpoint_callback,
+]
 
 optimizer = tf.keras.optimizers.Nadam(learning_rate=CONFIG.LEARNING_RATE)
 
