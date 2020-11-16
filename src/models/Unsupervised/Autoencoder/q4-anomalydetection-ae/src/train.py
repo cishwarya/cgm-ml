@@ -195,16 +195,10 @@ def tf_preprocess(image):
     return image
 
 dataset_train = dataset_train.map(lambda sample: tf_preprocess(sample["image"]))
-dataset_train = dataset_train.cache()
-dataset_train = dataset_train.prefetch(tf.data.experimental.AUTOTUNE)
 
 dataset_validate = dataset_validate.map(lambda sample: tf_preprocess(sample["image"]))
-dataset_validate = dataset_validate.cache()
-dataset_validate = dataset_validate.prefetch(tf.data.experimental.AUTOTUNE)
 
 dataset_anomaly = dataset_anomaly.map(lambda sample: tf_preprocess(sample["image"]))
-dataset_anomaly = dataset_anomaly.cache()
-dataset_anomaly = dataset_anomaly.prefetch(tf.data.experimental.AUTOTUNE)
 
 # Note: Now the datasets are prepared.
 
@@ -249,7 +243,8 @@ model.train(
     epochs=CONFIG.EPOCHS,
     batch_size=CONFIG.BATCH_SIZE,
     shuffle_buffer_size=CONFIG.SHUFFLE_BUFFER_SIZE,
-    render=True
+    render=True,
+    render_every=5
     #kl_loss_factor=CONFIG.KL_LOSS_FACTOR
 )
 
