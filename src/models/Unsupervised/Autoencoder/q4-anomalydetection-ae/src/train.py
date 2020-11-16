@@ -188,6 +188,7 @@ else:
 # https://www.tensorflow.org/datasets/catalog/cats_vs_dogs
 dataset_train, dataset_validate = tfds.load("mnist", split=["train[:80%]", "train[80%:]"])
 #dataset_train, dataset_validate = tfds.load("cats_vs_dogs", split=["train[:20%]", "train[25%:30%]"])
+dataset_anomaly = tfds.load("fashion_mnist", split="train[:20%]")
 
 def tf_preprocess(image):
     image = tf.image.resize(image, (CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH)) / 255.0
@@ -200,6 +201,10 @@ dataset_train = dataset_train.prefetch(tf.data.experimental.AUTOTUNE)
 dataset_validate = dataset_validate.map(lambda sample: tf_preprocess(sample["image"]))
 dataset_validate = dataset_validate.cache()
 dataset_validate = dataset_validate.prefetch(tf.data.experimental.AUTOTUNE)
+
+dataset_anomaly = dataset_anomaly.map(lambda sample: tf_preprocess(sample["image"]))
+dataset_anomaly = dataset_anomaly.cache()
+dataset_anomaly = dataset_anomaly.prefetch(tf.data.experimental.AUTOTUNE)
 
 # Note: Now the datasets are prepared.
 
@@ -239,7 +244,8 @@ training_callbacks = [
 
 model.train(
     dataset_train, 
-    dataset_validate, 
+    dataset_validate,
+    dataset_anomaly, 
     epochs=CONFIG.EPOCHS,
     batch_size=CONFIG.BATCH_SIZE,
     shuffle_buffer_size=CONFIG.SHUFFLE_BUFFER_SIZE,

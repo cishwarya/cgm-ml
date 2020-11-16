@@ -14,14 +14,17 @@ class VariationalAutoencoder(tf.keras.Model):
     def __init__(self, input_shape, filters, latent_dim, size):
         super().__init__()
 
+        assert size in ["tiny", "small", "big"]
+
+        # Save some parameters.
         self.filters = []
         self.latent_dim = latent_dim
-        assert size in ["tiny", "small", "big"]
         self.size = size
 
         # TODO Describe.
         bridge_shape = (input_shape[0] // 2**len(filters), input_shape[1] // 2**len(filters), filters[-1])
 
+        # Create encoder and decoder.
         if self.size == "tiny":
             self.encoder = tf.keras.models.Sequential([
                 tf.keras.layers.InputLayer(input_shape=input_shape),
@@ -96,7 +99,7 @@ class VariationalAutoencoder(tf.keras.Model):
         # Get latent vector.
         z = self.reparameterize(mean, logvar)
 
-        # Decode
+        # Decode.
         y = self.decode(z, apply_sigmoid=True)
 
         return y
@@ -127,51 +130,59 @@ class VariationalAutoencoder(tf.keras.Model):
         return logits
 
     
-    def train(self, dataset_train, dataset_validate, epochs, batch_size, shuffle_buffer_size, render=False):
-        optimizer = tf.keras.optimizers.Adam(1e-4)
+    def train(self, dataset_train, dataset_validate, dataset_anomaly, epochs, batch_size, shuffle_buffer_size, render=False):
         print("Starting training...")
 
-        dataset_train_samples = None
-        for x in dataset_train.batch(10).take(1):
-            dataset_train_samples = x[0:10]
-            break
+        # Create optimizer.
+        optimizer = tf.keras.optimizers.Adam(1e-4)
+
+        # Create history object.
+        history = { key: [] for key in ["loss", "kl_loss", "r"]}
+
+        # Pick some samples from each set.
+        def pick_samples(dataset, number):
+            for batch in dataset.batch(number).take(1):
+                return  batch[0:number]
+        dataset_train_samples = pick_samples(dataset_train, 10)
+        dataset_validate_samples = pick_samples(dataset_validate, 10)
+        dataset_anomaly_samples = pick_samples(dataset_anomaly, 10)
         
-        dataset_validate_samples = None
-        for x in dataset_validate.batch(10).take(1):
-            dataset_validate_samples = x[0:10]
-            break
-        #dataset_samples = list(dataset_samples.as_numpy_iterator())
-        #dataset_samples = np.array(dataset_samples)
-        
+        # Prepare datasets for training.
         dataset_train = dataset_train.shuffle(shuffle_buffer_size).batch(batch_size)
-        dataset_validate = dataset_validate.shuffle(shuffle_buffer_size).batch(batch_size)
+        dataset_validate = dataset_validate.batch(batch_size)
 
+        # Render reconstructions before training.
         if render:
-            render_reconstructions(self, dataset_train_samples, filename=f"reconstruction-train-0000.png")
-            render_reconstructions(self, dataset_validate_samples, filename=f"reconstruction-validate-0000.png")
+            render_reconstructions(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, filename=f"reconstruction-0000.png")
 
+        # Train.
         for epoch in range(1, epochs + 1):
 
             start_time = time.time()
+
+            # Train with training set.
             for train_x in dataset_train:
                 train_step(self, train_x, optimizer)
             end_time = time.time()
 
+            # Compute loss for validation set.
             loss = tf.keras.metrics.Mean()
             for validate_x in dataset_validate:
                 loss(compute_loss(self, validate_x))
             elbo = -loss.result()
-            #display.clear_output(wait=False)
+
             print('Epoch: {}, Test set ELBO: {}, time elapse for current epoch: {}'
                     .format(epoch, elbo, end_time - start_time))
 
+            # Render reconstructions after this epoch.
             if render:
-                render_reconstructions(self, dataset_train_samples, filename=f"reconstruction-train-{epoch:04d}.png")
-                render_reconstructions(self, dataset_validate_samples, filename=f"reconstruction-validate-{epoch:04d}.png")
+                render_reconstructions(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, filename=f"reconstruction-{epoch:04d}.png")
         
+        # Merge reconstructions into an animation.
         if render:
-            create_animation("reconstruction-train-*", "reconstruction-animation-train.gif")
-            create_animation("reconstruction-validate-*", "reconstruction-animation-validate.gif")
+            create_animation("reconstruction-*", "reconstruction-animation.gif")
+
+        return history
 
 
 def log_normal_pdf(sample, mean, logvar, raxis=1):
@@ -194,37 +205,44 @@ def compute_loss(model, x):
 
 @tf.function
 def train_step(model, x, optimizer):
-    """Executes one training step and returns the loss.
-
-    This function computes the loss and gradients, and uses the latter to
-    update the model's parameters.
-    """
     with tf.GradientTape() as tape:
         loss = compute_loss(model, x)
     gradients = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
 
-def render_reconstructions(model, samples, filename):
+def render_reconstructions(model, samples_train, samples_validate, samples_anomaly, filename):
 
-    reconstructions = model.predict(samples, steps=10)
+    # Reconstruct all samples.
+    reconstructions_train = model.predict(samples_train, steps=len(samples_train))
+    reconstructions_validate = model.predict(samples_validate, steps=len(samples_validate))
+    reconstructions_anomaly = model.predict(samples_anomaly, steps=len(samples_anomaly))
     
-    image = np.zeros((2 * samples.shape[1], samples.shape[0]  * samples.shape[1], 3))
-    for sample_index, (sample, reconstruction) in enumerate(zip(samples, reconstructions)):
-        s1 = 0
-        e1 = sample.shape[1]
-        s2 = sample_index * sample.shape[0]
-        e2 = (sample_index + 1) * sample.shape[0]
-        image[s1:e1, s2:e2] = sample
-        s1 = sample.shape[1]
-        e1 = 2 * sample.shape[1]
-        s2 = sample_index * sample.shape[0]
-        e2 = (sample_index + 1) * sample.shape[0]
-        image[s1:e1, s2:e2] = reconstruction
+    # This will be the result image.
+    image = np.zeros((6 * samples_train.shape[1], samples_train.shape[0]  * samples_train.shape[1], 3))
     
+    # Render all samples and their reconstructions.
+    def render(samples, reconstructions, offset):
+        for sample_index, (sample, reconstruction) in enumerate(zip(samples, reconstructions)):
+            s1 = (offset + 0) * sample.shape[1]
+            e1 = (offset + 1) * sample.shape[1]
+            s2 = sample_index * sample.shape[0]
+            e2 = (sample_index + 1) * sample.shape[0]
+            image[s1:e1, s2:e2] = sample
+            s1 = (offset + 1) * sample.shape[1]
+            e1 = (offset + 2) * sample.shape[1]
+            s2 = sample_index * sample.shape[0]
+            e2 = (sample_index + 1) * sample.shape[0]
+            image[s1:e1, s2:e2] = reconstruction
+    render(samples_train, reconstructions_train, 0)
+    render(samples_validate, reconstructions_validate, 2)
+    render(samples_anomaly, reconstructions_anomaly, 4)
+    
+    # Convert and save the image.
     image = (image * 255).astype(np.uint8)
     image = Image.fromarray(image)
     image.save(filename)
+
 
 
 def create_animation(glob_search_path, filename):
