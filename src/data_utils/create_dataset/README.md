@@ -8,7 +8,11 @@ CGM-ML infrastructre currently prepares the dataset into 3 formats(RGB,pointclou
 
 In the future we plan to not support PCD files anymore (due to their big size).
 
-## Configuration
+## Getting started
+
+To get started with this utility please follow the installation instruction mention on the main page of the github repository.
+
+## Usage
 
 * The utility  looks for the configuration parameters provided in the `parameters.yaml`.
 - `db_connection_file`: connection file to connect to the database 
