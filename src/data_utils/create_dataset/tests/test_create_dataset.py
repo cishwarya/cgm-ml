@@ -1,15 +1,14 @@
 import numpy as np
 import yaml
 import pandas as pd
-from data_utils import CollectQrcodes
 import unittest
-import sys
 from pathlib import Path
+import sys
 sys.path.append(str(Path(__file__).parents[1]))
+from data_utils import CollectQrcodes
 
-
-parameters = 'data_utils/create_dataset/parameters.yml'
-dbconnection = 'data_utils/create_dataset/dbconnection.json'
+parameters = 'src/data_utils/create_dataset/parameters.yml'
+dbconnection = 'src/data_utils/create_dataset/dbconnection.json'
 
 with open(parameters, "r") as ymlfile:
     cfg = yaml.load(ymlfile, Loader=yaml.FullLoader)
