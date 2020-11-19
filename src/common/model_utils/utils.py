@@ -9,7 +9,7 @@ from azureml.core.workspace import Workspace
 from tensorflow.keras import callbacks
 
 
-def get_optimizer(use_one_cycle: bool, lr: float, n_steps: int) -> tf.python.keras.optimizer_v2.optimizer_v2.OptimizerV2:
+def get_optimizer(use_one_cycle: bool, lr: float, n_steps: int, wd: float) -> tf.python.keras.optimizer_v2.optimizer_v2.OptimizerV2:
     if use_one_cycle:
         lr_schedule = tfa.optimizers.TriangularCyclicalLearningRate(
             initial_learning_rate=lr / 100,
@@ -17,7 +17,7 @@ def get_optimizer(use_one_cycle: bool, lr: float, n_steps: int) -> tf.python.ker
             step_size=n_steps,
         )
         # Note: When using 1cycle, this uses the Adam (not Nadam) optimizer
-        return tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+        return tfa.optimizers.AdamW(weight_decay=wd, learning_rate=lr_schedule)
     return tf.keras.optimizers.Nadam(learning_rate=lr)
 
 

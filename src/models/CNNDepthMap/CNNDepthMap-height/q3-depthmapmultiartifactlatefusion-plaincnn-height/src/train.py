@@ -179,7 +179,7 @@ training_callbacks = [
 
 optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
                           lr=CONFIG.LEARNING_RATE,
-                          n_steps=len(paths_training) / CONFIG.BATCH_SIZE)
+                          n_steps=len(paths_training) / CONFIG.BATCH_SIZE)  # TODO
 
 # Compile the model.
 model.compile(optimizer=optimizer, loss="mse", metrics=["mae"])

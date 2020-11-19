@@ -15,12 +15,13 @@ CONFIG = dotdict(dict(
     SPLIT_SEED=0,
     IMAGE_TARGET_HEIGHT=240,
     IMAGE_TARGET_WIDTH=180,
-    EPOCHS=1000,
+    EPOCHS=500,
     BATCH_SIZE=256,
     SHUFFLE_BUFFER_SIZE=2560,
     NORMALIZATION_VALUE=7.5,
     LEARNING_RATE=0.0007,
     USE_ONE_CYCLE=True,
+    WEIGHT_DECAY=0.01,  # weightDecay=0.1 (often best), 0.01 (default in fastai)
 
     # Parameters for dataset generation.
     TARGET_INDEXES=[0],  # 0 is height, 1 is weight.
