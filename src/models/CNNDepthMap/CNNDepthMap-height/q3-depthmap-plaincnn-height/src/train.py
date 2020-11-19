@@ -6,6 +6,7 @@ import shutil
 
 import glob2 as glob
 import tensorflow as tf
+from tensorflow.keras import callbacks, layers, models, Model
 from azureml.core import Experiment, Workspace
 from azureml.core.run import Run
 
@@ -30,7 +31,7 @@ if run.id.startswith("OfflineRun"):
 
 from model import create_cnn  # noqa: E402
 from tmp_model_util.preprocessing import preprocess_depthmap, preprocess_targets  # noqa: E402
-from tmp_model_util.utils import download_dataset, get_dataset_path, AzureLogCallback, create_tensorboard_callback, get_optimizer  # noqa: E402
+from tmp_model_util.utils import download_dataset, get_dataset_path, AzureLogCallback, create_tensorboard_callback, get_optimizer, create_base_cnn, create_head  # noqa: E402
 
 # Make experiment reproducible
 tf.random.set_seed(CONFIG.SPLIT_SEED)
@@ -82,7 +83,7 @@ assert len(qrcode_paths) != 0
 # Shuffle and split into train and validate.
 random.shuffle(qrcode_paths)
 split_index = int(len(qrcode_paths) * 0.8)
-qrcode_paths_training = qrcode_paths[:split_index]
+qrcode_paths_training = qrcode_paths[:split_index][:30]
 qrcode_paths_validate = qrcode_paths[split_index:]
 qrcode_paths_activation = random.choice(qrcode_paths_validate)
 qrcode_paths_activation = [qrcode_paths_activation]
@@ -179,13 +180,44 @@ del dataset_norm
 
 # Create the model.
 input_shape = (CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
-model = create_cnn(input_shape, dropout=True)
-model.summary()
+
+
+
+# Model
+
+# model = create_cnn(input_shape, dropout=True)
+
+base_model = create_base_cnn(input_shape, dropout=True)
+head_input_shape = (128,)
+head_model1 = create_head(head_input_shape, dropout=True, name="head1")
+head_model2 = create_head(head_input_shape, dropout=True, name="head2")
+
+model_input = layers.Input(
+    shape=(CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
+)
+
+features = base_model(model_input)
+
+model_output1 = head_model1(features)
+model_output2 = head_model2(features)
+
+# https://datascience.stackexchange.com/questions/27498/multi-task-learning-in-keras
+# Alternative: keras.layers.concatenate ?
+model = Model(inputs=model_input, outputs=[model_output1, model_output2])
+
+
+
+# Loss
+
+# https://www.tensorflow.org/api_docs/python/tf/keras/Sequential
+custom_loss_val = ['val_loss', 'val_loss']
+custom_loss = ['mse', 'mse']
+
 
 best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
 checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
     filepath=best_model_path,
-    monitor="val_loss",
+    monitor=custom_loss_val,  # doesn't like the list
     save_best_only=True,
     verbose=1
 )
@@ -199,10 +231,16 @@ optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
                           lr=CONFIG.LEARNING_RATE,
                           n_steps=len(paths_training) / CONFIG.BATCH_SIZE)
 
+# tf.estimator.RegressionHead(
+#     label_dimension=1, weight_column=None,
+#     loss_reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE, loss_fn=None,
+#     inverse_link_fn=None, name=None
+# )
+
 # Compile the model.
 model.compile(
     optimizer=optimizer,
-    loss="mse",
+    loss=custom_loss,
     metrics=["mae"]
 )
 
@@ -214,6 +252,8 @@ model.fit(
     callbacks=training_callbacks,
     verbose=2
 )
+
+
 
 # Done.
 run.complete()
