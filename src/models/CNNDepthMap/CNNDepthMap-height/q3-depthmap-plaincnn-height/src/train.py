@@ -215,16 +215,16 @@ custom_loss = ['mse', 'mse']
 
 
 best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
-checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-    filepath=best_model_path,
-    monitor=custom_loss_val,  # doesn't like the list
-    save_best_only=True,
-    verbose=1
-)
+# checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+#     filepath=best_model_path,
+#     monitor=custom_loss_val,  # doesn't like the list
+#     save_best_only=True,
+#     verbose=1
+# )
 training_callbacks = [
     AzureLogCallback(run),
     create_tensorboard_callback(),
-    checkpoint_callback,
+    # checkpoint_callback,
 ]
 
 optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
@@ -241,7 +241,7 @@ optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
 model.compile(
     optimizer=optimizer,
     loss=custom_loss,
-    metrics=["mae"]
+    metrics=["mae"]  # weird??
 )
 
 # Train the model.
