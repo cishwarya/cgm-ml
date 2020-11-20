@@ -179,7 +179,7 @@ del dataset_norm
 
 # Create the model.
 input_shape = (CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
-model = create_cnn(input_shape, dropout=True)
+model = create_cnn(input_shape, dropout=CONFIG.USE_DROPOUT)
 model.summary()
 
 best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
