@@ -183,40 +183,27 @@ del dataset_norm
 
 # Create the model.
 input_shape = (CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
-
-
-
-# Model
-
-# model = create_cnn(input_shape, dropout=True)
-
 base_model = create_base_cnn(input_shape, dropout=True)
 head_input_shape = (128,)
 head_model1 = create_head(head_input_shape, dropout=True, name="height")
 head_model2 = create_head(head_input_shape, dropout=True, name="weight")
-
-model_input = layers.Input(
-    shape=(CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
-)
-
+model_input = layers.Input(shape=(CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1))
 features = base_model(model_input)
-
 model_output1 = head_model1(features)
 model_output2 = head_model2(features)
-
-# https://datascience.stackexchange.com/questions/27498/multi-task-learning-in-keras
-# Alternative: keras.layers.concatenate ?
 model = Model(inputs=model_input, outputs=[model_output1, model_output2])
 
-
-
-# Loss
-
-# https://www.tensorflow.org/api_docs/python/tf/keras/Sequential
-# custom_loss_val = ['val_loss', 'val_loss']
+best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
+checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+    filepath=best_model_path,
+    monitor="val_loss",
+    save_best_only=True,
+    verbose=1
+)
 training_callbacks = [
     AzureLogCallback(run),
     create_tensorboard_callback(),
+    checkpoint_callback,
 ]
 
 optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
@@ -239,8 +226,6 @@ model.fit(
     callbacks=training_callbacks,
     verbose=2
 )
-
-
 
 # Done.
 run.complete()
