@@ -211,37 +211,20 @@ model = Model(inputs=model_input, outputs=[model_output1, model_output2])
 
 # https://www.tensorflow.org/api_docs/python/tf/keras/Sequential
 # custom_loss_val = ['val_loss', 'val_loss']
-custom_loss = ['mse', 'mse']
-loss_weights = [1.0, 1.0]
-
-best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
-# checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-#     filepath=best_model_path,
-#     monitor=custom_loss_val,  # doesn't like the list
-#     save_best_only=True,
-#     verbose=1
-# )
 training_callbacks = [
     AzureLogCallback(run),
     create_tensorboard_callback(),
-    # checkpoint_callback,
 ]
 
 optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
                           lr=CONFIG.LEARNING_RATE,
                           n_steps=len(paths_training) / CONFIG.BATCH_SIZE)
 
-# tf.estimator.RegressionHead(
-#     label_dimension=1, weight_column=None,
-#     loss_reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE, loss_fn=None,
-#     inverse_link_fn=None, name=None
-# )
-
 # Compile the model.
 model.compile(
     optimizer=optimizer,
-    loss=custom_loss,
-    loss_weights=loss_weights,
+    loss=['mse', 'mse'],
+    loss_weights=[1.0, 1.0],
     metrics=[["mae"], ["mae"]]
 )
 
