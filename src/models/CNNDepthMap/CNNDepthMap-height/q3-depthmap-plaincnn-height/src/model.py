@@ -47,8 +47,6 @@ def create_cnn(input_shape, dropout):
         model.add(layers.Dropout(0.2))
 
     model.add(layers.Dense(128, activation="relu"))
-    if dropout:
-        model.add(layers.Dropout(0.25))
 
     model.add(layers.Dense(1, activation="linear"))
 
