@@ -242,7 +242,7 @@ model.compile(
     optimizer=optimizer,
     loss=custom_loss,
     loss_weights=loss_weights,
-    metrics=["mae"]  # weird??
+    metrics=[["mae"], ["mae"]]
 )
 
 # Train the model.
