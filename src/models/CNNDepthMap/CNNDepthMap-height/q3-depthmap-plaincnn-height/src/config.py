@@ -23,5 +23,5 @@ CONFIG = dotdict(dict(
     USE_ONE_CYCLE=True,
 
     # Parameters for dataset generation.
-    TARGET_INDEXES=[0],  # 0 is height, 1 is weight.
+    TARGET_INDEXES=[0, 1],  # 0 is height, 1 is weight.
 ))
