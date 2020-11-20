@@ -83,7 +83,7 @@ assert len(qrcode_paths) != 0
 # Shuffle and split into train and validate.
 random.shuffle(qrcode_paths)
 split_index = int(len(qrcode_paths) * 0.8)
-qrcode_paths_training = qrcode_paths[:split_index][:30]
+qrcode_paths_training = qrcode_paths[:split_index]
 qrcode_paths_validate = qrcode_paths[split_index:]
 qrcode_paths_activation = random.choice(qrcode_paths_validate)
 qrcode_paths_activation = [qrcode_paths_activation]
