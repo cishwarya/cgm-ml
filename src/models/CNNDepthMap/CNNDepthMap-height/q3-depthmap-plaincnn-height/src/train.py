@@ -138,7 +138,10 @@ def tf_load_pickle(path, max_value):
 
     depthmap, targets = tf.py_function(py_load_pickle, [path, max_value], [tf.float32, tf.float32])
     depthmap.set_shape((CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1))
+
     targets.set_shape((len(CONFIG.TARGET_INDEXES,)))
+    targets = {'height': targets[0], 'weight': targets[1]}
+
     return depthmap, targets
 
 
@@ -189,8 +192,8 @@ input_shape = (CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
 
 base_model = create_base_cnn(input_shape, dropout=True)
 head_input_shape = (128,)
-head_model1 = create_head(head_input_shape, dropout=True, name="head1")
-head_model2 = create_head(head_input_shape, dropout=True, name="head2")
+head_model1 = create_head(head_input_shape, dropout=True, name="height")
+head_model2 = create_head(head_input_shape, dropout=True, name="weight")
 
 model_input = layers.Input(
     shape=(CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
@@ -223,9 +226,9 @@ optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
 # Compile the model.
 model.compile(
     optimizer=optimizer,
-    loss=['mse', 'mse'],
-    loss_weights=[1.0, 1.0],
-    metrics=[["mae"], ["mae"]]
+    loss={'height': 'mse', 'weight': 'mse'},
+    loss_weights={'height': 1.0, 'weight': 1.0},
+    metrics={'height': ["mae"], 'weight': ["mae"]}
 )
 
 # Train the model.
