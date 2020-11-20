@@ -214,7 +214,7 @@ optimizer = get_optimizer(CONFIG.USE_ONE_CYCLE,
 model.compile(
     optimizer=optimizer,
     loss={'height': 'mse', 'weight': 'mse'},
-    loss_weights={'height': 1.0, 'weight': 1.0},
+    loss_weights={'height': CONFIG.HEIGHT_IMPORTANCE, 'weight': CONFIG.WEIGHT_IMPORTANCE},
     metrics={'height': ["mae"], 'weight': ["mae"]}
 )
 

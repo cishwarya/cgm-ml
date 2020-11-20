@@ -24,4 +24,6 @@ CONFIG = dotdict(dict(
 
     # Parameters for dataset generation.
     TARGET_INDEXES=[0, 1],  # 0 is height, 1 is weight.
+    HEIGHT_IMPORTANCE=0.6,
+    WEIGHT_IMPORTANCE=0.4,
 ))
