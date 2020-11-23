@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import PIL
 import tensorflow as tf
-import tensorflow_probability as tfp
 import time
 from PIL import Image
 import os
@@ -190,7 +189,7 @@ class VariationalAutoencoder(tf.keras.Model):
         return logits
 
     
-    def train(self, dataset_train, dataset_validate, dataset_anomaly, epochs, batch_size, shuffle_buffer_size, render=False, render_every=1):
+    def train(self, dataset_train, dataset_validate, dataset_anomaly, epochs, batch_size, shuffle_buffer_size, render=False, render_every=1, callbacks=[], outputs_path="."):
         """Trains the model.
 
         Args:
@@ -202,6 +201,8 @@ class VariationalAutoencoder(tf.keras.Model):
             shuffle_buffer_size (int): Size of the shuffle buffer.
             render (bool, optional): Triggers rendering of statistics. Defaults to False.
             render_every (int, optional): How often to render statistics. Defaults to 1.
+            callbacks (list, optional): Callbacks to be called back.
+            outputs_path (string, optional): Path where outputs should be written. Default ".".
 
         Returns:
             dict: History dictionary.
@@ -230,10 +231,11 @@ class VariationalAutoencoder(tf.keras.Model):
 
         # Render reconstructions and individual losses before training.
         if render:
-            render_reconstructions(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, filename=f"reconstruction-0000.png")
-            render_individual_losses(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, filename=f"losses-0000.png")
+            render_reconstructions(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, outputs_path=outputs_path, filename=f"reconstruction-0000.png")
+            render_individual_losses(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, outputs_path=outputs_path, filename=f"losses-0000.png")
 
         # Train.
+        print("Train...")
         for epoch in range(1, epochs + 1):
 
             start_time = time.time()
@@ -248,6 +250,11 @@ class VariationalAutoencoder(tf.keras.Model):
             loss_validate = compute_mean_loss(self, dataset_validate)
             loss_anomaly = compute_mean_loss(self, dataset_anomaly)
 
+            # Convert.
+            loss_train = float(loss_train)
+            loss_validate = float(loss_validate)
+            loss_anomaly = float(loss_anomaly)
+
             # Update the history.            
             history["loss_train"].append(loss_train)
             history["loss_validate"].append(loss_validate)
@@ -256,39 +263,49 @@ class VariationalAutoencoder(tf.keras.Model):
             # Save the best model.
             if loss_validate < best_validation_loss:
                 print(f"Found new best model with validation loss {loss_validate}.")
-                self.save_weights("model_best")
+                self.save_weights(outputs_path=outputs_path, filename="model_best")
                 best_validation_loss = loss_validate
 
             end_time = time.time()
 
+            # Call back the callbacks.
+            logs = {
+                "loss_train": loss_train,
+                "loss_validate": loss_validate,
+                "loss_anomaly": loss_anomaly
+            }
+            for callback in callbacks:
+                callback.on_epoch_end(epoch, logs=logs)
+
+            # Print status.
             print('Epoch: {}, validate set loss: {}, time elapse for current epoch: {}'
                     .format(epoch, loss_validate, end_time - start_time))
 
             # Render reconstructions after every xth epoch.
             if render and (epoch % render_every) == 0:
-                render_reconstructions(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, filename=f"reconstruction-{epoch:04d}.png")
-                render_individual_losses(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, filename=f"losses-{epoch:04d}.png")
+                render_reconstructions(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, outputs_path=outputs_path, filename=f"reconstruction-{epoch:04d}.png")
+                render_individual_losses(self, dataset_train_samples, dataset_validate_samples,  dataset_anomaly_samples, outputs_path=outputs_path, filename=f"losses-{epoch:04d}.png")
         
         # Merge reconstructions into an animation.
         if render:
-            create_animation("reconstruction-*", "reconstruction-animation.gif", delete_originals=True)
-            create_animation("losses-*", "losses-animation.gif", delete_originals=True)
+            create_animation("reconstruction-*", outputs_path=outputs_path, filename="reconstruction-animation.gif", delete_originals=True)
+            create_animation("losses-*", outputs_path=outputs_path, filename="losses-animation.gif", delete_originals=True)
 
         # Render the history.
-        render_history(history, "history.png")
+        render_history(history, outputs_path=outputs_path, filename="history.png")
 
         # Done.
         return history
 
 
-    def save_weights(self, name):
+    def save_weights(self, outputs_path, filename):
         """Saves the weights of the encoder and the decoder.
 
         Args:
             name (str): Name of the files.
         """
-        self.encoder.save_weights(name + "_encoder_weights.h5")
-        self.decoder.save_weights(name + "_decoder_weights.h5")
+        self.encoder.save_weights(os.path.join(outputs_path, filename + "_encoder_weights.h5"))
+        self.decoder.save_weights(os.path.join(outputs_path, filename + "_decoder_weights.h5"))
 
 
 def log_normal_pdf(sample, mean, logvar, raxis=1):
@@ -356,7 +373,7 @@ def compute_loss(model, x):
     return -tf.reduce_mean(logpx_z + logpz - logqz_x)
 
 
-def render_reconstructions(model, samples_train, samples_validate, samples_anomaly, filename, steps=10):
+def render_reconstructions(model, samples_train, samples_validate, samples_anomaly, outputs_path, filename, steps=10):
     """Renders reconstructions of training set, validation set, and anomaly set.
 
     Args:
@@ -396,10 +413,10 @@ def render_reconstructions(model, samples_train, samples_validate, samples_anoma
     # Convert and save the image.
     image = (image * 255).astype(np.uint8)
     image = Image.fromarray(image)
-    image.save(filename)
+    image.save(os.path.join(outputs_path, filename))
 
 
-def render_individual_losses(model, samples_train, samples_validate, samples_anomaly, filename):
+def render_individual_losses(model, samples_train, samples_validate, samples_anomaly, outputs_path, filename):
     """Render the individual losses as a single histogram.
 
     Args:
@@ -419,11 +436,11 @@ def render_individual_losses(model, samples_train, samples_validate, samples_ano
     plt.hist(losses_validate, label="losses_validate", alpha=alpha, bins=bins)
     plt.hist(losses_anomaly, label="losses_anomaly", alpha=alpha, bins=bins)
     plt.legend()
-    plt.savefig(filename)
+    plt.savefig(os.path.join(outputs_path, filename))
     plt.close()
 
 
-def create_animation(glob_search_path, filename, delete_originals=False):
+def create_animation(glob_search_path, outputs_path, filename, delete_originals=False):
     """Finds some images and merges them as a GIF.
 
     Args:
@@ -431,8 +448,8 @@ def create_animation(glob_search_path, filename, delete_originals=False):
         filename (str): Filename of the animation.
         delete_originals (bool, optional): If the originals should be erased. Defaults to False.
     """
-    with imageio.get_writer(filename, mode="I") as writer:
-        paths = glob.glob(glob_search_path)
+    with imageio.get_writer(os.path.join(outputs_path, filename), mode="I") as writer:
+        paths = glob.glob(os.path.join(outputs_path, glob_search_path))
         paths = [path for path in paths if path.endswith(".png")]
         paths = sorted(paths)
         for path in paths:
@@ -445,7 +462,7 @@ def create_animation(glob_search_path, filename, delete_originals=False):
                 os.remove(path)
 
 
-def render_history(history, filename):
+def render_history(history, outputs_path, filename):
     """Renders the training history.
 
     Args:
@@ -455,5 +472,5 @@ def render_history(history, filename):
     for key, value in history.items():
         plt.plot(value, label=key)
     plt.legend()
-    plt.savefig(filename)
+    plt.savefig(os.path.join(outputs_path, filename))
     plt.close()
