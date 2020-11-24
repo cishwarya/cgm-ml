@@ -1,6 +1,14 @@
+# Evaluate model performance
+
 ## Quality Assurance
 
 Inside QA, we have implemented logic to evaluate various different models and to perform evaluation of different use cases.
+
+- The steps to evaluate the model are run in an azure pipeline
+- A jupyter notebook is run (via papermill)
+- the resulting notebook is a pipeline artifact
+- the jupyter notebook spins up a node on an AzureML cluster evaluate
+- once the job on the cluster is done, this gets the resulting model evaluation results (CSV) and displays it in a notebook cell
 
 ## Evaluation on Depthmap Height Model
 
@@ -28,3 +36,7 @@ You can run the evaluation by triggering the pipeline [test-pipeline.yml](./test
 Make necessary changes and commit the code to run the evaluation.
 
 For more details one can look the [test_config.py](./eval-depthmap-height/src/qa_config.py)
+
+## TODO
+
+- enable & document how to do a local run: `python evaluate.py`
