@@ -42,3 +42,5 @@ For more details one can look the [test_config.py](./eval-depthmap-height/src/qa
 For debugging purposes, you might want to run this without the pipeline.
 To do so, execute the cells in `eval_notebook.ipynb`.
 This will still use the GPU cluster to do the heavy processing.
+
+Also it is useful to set `DATA_CONFIG.NAME='anon-depthmap-mini'` for debugging purposes.

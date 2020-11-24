@@ -117,7 +117,7 @@ if __name__ == "__main__":
     del dataset_norm
 
     #Get the prediction
-    prediction_list_one = get_height_prediction(MODEL_CONFIG.NAME, dataset_evaluation)
+    prediction_list_one = get_height_prediction(f"{MODEL_CONFIG.INPUT_LOCATION}/{MODEL_CONFIG.NAME}", dataset_evaluation)
 
     print("Prediction made by model on the depthmaps...")
     print(prediction_list_one)
