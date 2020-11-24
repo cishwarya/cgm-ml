@@ -14,7 +14,7 @@ To get started with this utility please follow the installation instruction ment
 
 ## Usage
 
-* The utility  looks for the configuration parameters provided in the `parameters.yaml`.
+The utility  looks for the configuration parameters provided in the `parameters.yaml`.
 - `db_connection_file`: connection file to connect to the database 
 - `scan_group`: type of dataset you want to prepare ['train','test']
 - `scan_amount` : Amount of the data that you want to process.
