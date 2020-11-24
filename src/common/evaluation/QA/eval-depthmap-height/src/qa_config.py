@@ -10,7 +10,7 @@ MODEL_CONFIG = dotdict(dict(
     EXPERIMENT_NAME='q4-depthmap-plaincnn-weight-95k',
     RUN_ID='q4-depthmap-plaincnn-weight-95k_1605774694_c216f6c5',
     INPUT_LOCATION='outputs',
-    NAME='best_model.h5',
+    NAME='best_model.ckpt',
 ))
 
 
