@@ -2,7 +2,7 @@
 
 Inside QA, we have implemented logic to evaluate various different models and to perform evaluation of different use cases.
 
-## Evaluation on Depthmap Height Model 
+## Evaluation on Depthmap Height Model
 
 It contains logic to perform evaluation of models trained on single artifacts architecture.
 
@@ -12,7 +12,7 @@ It contains logic to evaluate acceptability of enumerators and our model based o
 
 ## Steps to perform evaluation
 
-Each evaluation contains the [test_config.py](./eval-depthmap-height/src/config.py) in src directory.
+Each evaluation contains the [test_config.py](./eval-depthmap-height/src/qa_config.py) in src directory.
 
 test_config.py mainly contains below parameters:
 
@@ -25,5 +25,4 @@ test_config.py mainly contains below parameters:
 
 Make necessary changes and commit the code to run the evaluation.
 
-For more details one can look the [test_config.py](./eval-depthmap-height/src/config.py)
-
+For more details one can look the [test_config.py](./eval-depthmap-height/src/qa_config.py)
