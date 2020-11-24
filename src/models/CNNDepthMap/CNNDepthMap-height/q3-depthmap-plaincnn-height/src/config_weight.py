@@ -21,10 +21,8 @@ CONFIG = dotdict(dict(
     NORMALIZATION_VALUE=7.5,
     LEARNING_RATE=0.0003,
     USE_ONE_CYCLE=True,
+    USE_DROPOUT=True,
 
     # Parameters for dataset generation.
     TARGET_INDEXES=[1],  # 0 is height, 1 is weight.
-    CODES_FOR_POSE_AND_SCANSTEP=("100", ),
-    N_REPEAT_DATASET=2,
-
 ))
