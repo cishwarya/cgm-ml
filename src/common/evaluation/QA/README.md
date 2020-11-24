@@ -23,6 +23,8 @@ test_config.py mainly contains below parameters:
     3. `DATA_CONFIG` : Dataset specific parameters
         e.g. dataset name registered in datastore for evaluation
 
+You can run the evaluation by triggering the pipeline [test-pipeline.yml](./test-pipeline.yml)
+
 Make necessary changes and commit the code to run the evaluation.
 
 For more details one can look the [test_config.py](./eval-depthmap-height/src/qa_config.py)
