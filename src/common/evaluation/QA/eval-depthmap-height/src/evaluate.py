@@ -42,7 +42,7 @@ def get_height_prediction(MODEL_PATH, dataset_evaluation):
         dataset_evaluation : dataset in which Evaluation
         need to performed
     '''
-    model = load_model(MODEL_PATH)
+    model = load_model(MODEL_PATH, compile=False)
     predictions = model.predict(dataset_evaluation.batch(DATA_CONFIG.BATCH_SIZE))
     prediction_list = np.squeeze(predictions)
     return prediction_list
