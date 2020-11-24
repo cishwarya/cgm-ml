@@ -84,8 +84,6 @@ random.shuffle(qrcode_paths)
 split_index = int(len(qrcode_paths) * 0.8)
 qrcode_paths_training = qrcode_paths[:split_index]
 qrcode_paths_validate = qrcode_paths[split_index:]
-qrcode_paths_activation = random.choice(qrcode_paths_validate)
-qrcode_paths_activation = [qrcode_paths_activation]
 
 del qrcode_paths
 
@@ -94,8 +92,6 @@ print("Paths for training:")
 print("\t" + "\n\t".join(qrcode_paths_training))
 print("Paths for validation:")
 print("\t" + "\n\t".join(qrcode_paths_validate))
-print("Paths for activation:")
-print("\t" + "\n\t".join(qrcode_paths_activation))
 
 print(len(qrcode_paths_training))
 print(len(qrcode_paths_validate))
@@ -114,15 +110,12 @@ def get_depthmap_files(paths):
 print("Getting depthmap paths...")
 paths_training = get_depthmap_files(qrcode_paths_training)
 paths_validate = get_depthmap_files(qrcode_paths_validate)
-paths_activate = get_depthmap_files(qrcode_paths_activation)
 
 del qrcode_paths_training
 del qrcode_paths_validate
-del qrcode_paths_activation
 
 print("Using {} files for training.".format(len(paths_training)))
 print("Using {} files for validation.".format(len(paths_validate)))
-print("Using {} files for validation.".format(len(paths_activate)))
 
 
 # Function for loading and processing depthmaps.
@@ -166,20 +159,11 @@ dataset_norm = dataset_norm.prefetch(tf.data.experimental.AUTOTUNE)
 dataset_validation = dataset_norm
 del dataset_norm
 
-# Create dataset for activation
-paths = paths_activate
-dataset = tf.data.Dataset.from_tensor_slices(paths)
-dataset_norm = dataset.map(lambda path: tf_load_pickle(path, CONFIG.NORMALIZATION_VALUE))
-dataset_norm = dataset_norm.cache()
-dataset_norm = dataset_norm.prefetch(tf.data.experimental.AUTOTUNE)
-dataset_activation = dataset_norm
-del dataset_norm
-
 # Note: Now the datasets are prepared.
 
 # Create the model.
 input_shape = (CONFIG.IMAGE_TARGET_HEIGHT, CONFIG.IMAGE_TARGET_WIDTH, 1)
-model = create_cnn(input_shape, dropout=True)
+model = create_cnn(input_shape, dropout=CONFIG.USE_DROPOUT)
 model.summary()
 
 best_model_path = str(DATA_DIR / f'outputs/{MODEL_CKPT_FILENAME}')
