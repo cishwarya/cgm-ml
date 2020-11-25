@@ -9,7 +9,7 @@ class dotdict(dict):
 MODEL_CONFIG = dotdict(dict(
     EXPERIMENT_NAME='q3-depthmap-plaincnn-height-95k',
 
-    RUN_ID='q3-depthmap-plaincnn-height-95k_1597988908_42c4ef33',  # Run 3
+    RUN_ID='q3-depthmap-plaincnn-height-95k_1597991583_682d43ab',  # Run 3
     #RUN_ID = 'q3-depthmap-plaincnn-height-95k_1600451633_cb44f6db',     #Run 17
 
     INPUT_LOCATION='outputs',
@@ -19,7 +19,7 @@ MODEL_CONFIG = dotdict(dict(
 
 EVAL_CONFIG = dotdict(dict(
     #Name of evaluation
-    NAME='q3-depthmap-plaincnn-height-realtime-sample-run',
+    NAME='q3-depthmap-plaincnn-height-95k_run_04',
 
     #Experiment in Azure ML which will be used for evaluation
     EXPERIMENT_NAME="QA-pipeline",
