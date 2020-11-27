@@ -186,13 +186,9 @@ def preprocess(depthmap):
     return depthmap
 
 
-#setter
 def setWidth(value):
     global width
     width = value
-
-#setter
-
 
 def setHeight(value):
     global height
