@@ -44,7 +44,3 @@ To do so, execute the cells in `eval_notebook.ipynb`.
 This will still use the GPU cluster to do the heavy processing.
 
 Also it is useful to set `DATA_CONFIG.NAME='anon-depthmap-mini'` for debugging purposes.
-
-## TODO
-
-- pipeline could write how many samples the CSV is based on
