@@ -1,0 +1,4 @@
+WARNING:root:Processing the data:
+Loading /mnt/batch/tasks/shared/LS_root/mounts/clusters/pksingh/code/users/pksingh/cgmgithub/cgm-ml/src/data_utils/create_dataset/dbconnection.json...
+Host:    ml-postgresql-sql-prod.postgres.database.azure.com
+DB-name: cgm

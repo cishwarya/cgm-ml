@@ -1,0 +1,11 @@
+database:
+    db_connection_file: 'src/data_utils/create_dataset/dbconnection.json'
+scans:
+    scan_amount : 3000
+calibration:
+    calibration_file: 'src/common/depthmap_toolkit/camera_calibration.txt'
+data:
+    scangroup: 'test' 
+paths:
+    source_path: '/mnt/bmzdata/cgminbmzprod_v5.0/'
+    target_path: 'src/data_utils/create_dataset/realtime_evaluation_updated/'
