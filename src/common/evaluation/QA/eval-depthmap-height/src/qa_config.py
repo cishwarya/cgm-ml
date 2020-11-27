@@ -64,7 +64,7 @@ DATA_CONFIG = dotdict(dict(
 RESULT_CONFIG = dotdict(dict(
     # Error margin on various ranges
     #EVALUATION_ACCURACIES = [.2, .4, .8, 1.2, 2., 2.5, 3., 4., 5., 6.]
-    ACCURACIES=[.2, .4, .6, 1, 1.2, 2., 2.5, 3., 4., 5., 6.],
+    ACCURACIES=[.2, .4, .6, 1, 1.2, 2., 2.5, 3., 4., 5., 6.],  # 0.2cm, 0.4cm, 0.6cm, 1cm, ...
     COLUMNS=['qrcode', 'artifact', 'scantype', 'GT', 'predicted'],
 
     #path of csv file in the experiment which final result is stored

@@ -60,9 +60,8 @@ DATA_CONFIG = dotdict(dict(
 #Result configuration for result generation after evaluation is done
 RESULT_CONFIG = dotdict(dict(
     # Error margin on various ranges
-    #EVALUATION_ACCURACIES = [.2, .4, .8, 1.2, 2., 2.5, 3., 4., 5., 6.]
-
     ACCURACIES=[0.04, 0.1, 0.21, 0.42],  # 40 gms, 100 gms, 210 gms, 420 gms
+
     COLUMNS=['qrcode', 'artifact', 'scantype', 'GT', 'predicted'],
 
     #path of csv file in the experiment which final result is stored
