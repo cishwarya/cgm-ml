@@ -116,8 +116,14 @@ if __name__ == "__main__":
     dataset_evaluation = dataset_norm
     del dataset_norm
 
-    #Get the prediction
-    prediction_list_one = get_height_prediction(f"{MODEL_CONFIG.INPUT_LOCATION}/{MODEL_CONFIG.NAME}", dataset_evaluation)
+    # Get the prediction
+    if MODEL_CONFIG.NAME.endswith(".h5"):
+        model_path = MODEL_CONFIG.NAME
+    elif MODEL_CONFIG.NAME.endswith(".ckpt"):
+        model_path = f"{MODEL_CONFIG.INPUT_LOCATION}/{MODEL_CONFIG.NAME}"
+    else:
+        raise NameError(f"{MODEL_CONFIG.NAME}'s path extension not supported")
+    prediction_list_one = get_height_prediction(model_path, dataset_evaluation)
 
     print("Prediction made by model on the depthmaps...")
     print(prediction_list_one)

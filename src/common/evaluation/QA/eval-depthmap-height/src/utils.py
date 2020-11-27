@@ -6,7 +6,7 @@ import glob2 as glob
 import numpy as np
 import pandas as pd
 
-from qa_config import DATA_CONFIG, RESULT_CONFIG
+from .qa_config import DATA_CONFIG, RESULT_CONFIG
 
 
 def preprocess_depthmap(depthmap):
@@ -114,5 +114,11 @@ def download_model(ws, experiment_name, run_id, input_location, output_location)
     #Download the model on which evaluation need to be done
     run = Run(experiment, run_id=run_id)
     #run.get_details()
-    run.download_file(input_location, output_location)
+
+    if input_location.endswith(".h5"):
+        run.download_file(input_location, output_location)
+    elif input_location.endswith(".ckpt"):
+        run.download_files(prefix=input_location, output_directory=output_location)
+    else:
+        raise NameError(f"{input_location}'s path extension not supported")
     print("Successfully downloaded model")
