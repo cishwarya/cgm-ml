@@ -7,19 +7,16 @@ class dotdict(dict):
 
 #Details of model used for evaluation
 MODEL_CONFIG = dotdict(dict(
-    EXPERIMENT_NAME='q3-depthmap-plaincnn-height-95k',
-
-    RUN_ID='q3-depthmap-plaincnn-height-95k_1597988908_42c4ef33',  # Run 3
-    #RUN_ID = 'q3-depthmap-plaincnn-height-95k_1600451633_cb44f6db',     #Run 17
-
+    EXPERIMENT_NAME='q4-depthmap-plaincnn-weight-95k',
+    RUN_ID='q4-depthmap-plaincnn-weight-95k_1605774694_c216f6c5',
     INPUT_LOCATION='outputs',
-    NAME='best_model.h5',
+    NAME='best_model.ckpt',
 ))
 
 
 EVAL_CONFIG = dotdict(dict(
     #Name of evaluation
-    NAME='q3-depthmap-plaincnn-height-100-95k-run_17',
+    NAME='q4-depthmap-plaincnn-weight-95k-run_12',
 
     #Experiment in Azure ML which will be used for evaluation
     EXPERIMENT_NAME="QA-pipeline",
@@ -47,7 +44,7 @@ DATA_CONFIG = dotdict(dict(
     NORMALIZATION_VALUE=7.5,
 
     # Parameters for dataset generation.
-    TARGET_INDEXES=[0],  # 0 is height, 1 is weight.
+    TARGET_INDEXES=[1],  # 0 is height, 1 is weight.
 
     CODE_TO_SCANTYPE={
         '100': '_front',
@@ -64,7 +61,8 @@ DATA_CONFIG = dotdict(dict(
 RESULT_CONFIG = dotdict(dict(
     # Error margin on various ranges
     #EVALUATION_ACCURACIES = [.2, .4, .8, 1.2, 2., 2.5, 3., 4., 5., 6.]
-    ACCURACIES=[.2, .4, .6, 1, 1.2, 2., 2.5, 3., 4., 5., 6.],
+
+    ACCURACIES=[0.04, 0.1, 0.21, 0.42],  # 40 gms, 100 gms, 210 gms, 420 gms
     COLUMNS=['qrcode', 'artifact', 'scantype', 'GT', 'predicted'],
 
     #path of csv file in the experiment which final result is stored
