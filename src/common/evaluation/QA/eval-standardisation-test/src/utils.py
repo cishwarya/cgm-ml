@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from skimage.transform import resize
 
-from qa_config import DATA_CONFIG, EVAL_CONFIG, RESULT_CONFIG
+from .qa_config import DATA_CONFIG, EVAL_CONFIG, RESULT_CONFIG
 
 image_target_height = 240
 image_target_width = 180
