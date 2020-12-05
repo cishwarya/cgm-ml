@@ -1,3 +1,5 @@
+__author__      = "Ishwarya Chandramouli"
+
 import json
 from collections import defaultdict
 from statistics import mean, stdev
