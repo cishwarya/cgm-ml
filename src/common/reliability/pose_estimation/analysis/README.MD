@@ -14,8 +14,8 @@ Following files are required to run this script:
  2. posepoints.py 
  3. anonrgbtrain_poseestimation_ps_posepoints.json
 
-config .py file contains the list of parameter configuration that has been used to run the pose estomation model on the data
-posepoints.py file
+- config .py file contains the list of parameter configuration that has been used to run the pose estomation model on the data
+- posepoints.py file contains functiosn to set pose details (POSE_PAIRS and BODY_PARTS) which has been used in the analyseOutput.py script
 
 Required libraries to run analyseOutput.py:
 - pandas
