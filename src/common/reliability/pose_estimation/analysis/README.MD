@@ -13,11 +13,10 @@ Following files are required to run this script:
 2.posepoints.py 
 3.anonrgbtrain_poseestimation_ps_posepoints.json
 
--CURRENT_DIRECTORY refers to the current working directory
--config .py file contains the list of parameter configuration that has been used to run the pose estomation model on the data
--posepoints.py file
+config .py file contains the list of parameter configuration that has been used to run the pose estomation model on the data
+posepoints.py file
 
 Required libraries to run analyseOutput.py:
--pandas
+- pandas
 
 SampleOutput.txt contains sample output from executing analyseOutput.py
