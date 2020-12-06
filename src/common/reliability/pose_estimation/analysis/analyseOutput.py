@@ -1,13 +1,14 @@
-__author__ = "Ishwarya Chandramouli"
-
 import json
 from collections import defaultdict
 from statistics import mean, stdev
+from zipfile import ZipFile
+import os
 
 import pandas as pd
-import posepoints
-from config import DATA_CONFIG
-
+import sys
+sys.path.append("..") 
+from src import posepoints
+from src.config import DATA_CONFIG
 
 def load_param_config():
     """
@@ -17,7 +18,6 @@ def load_param_config():
     model = DATA_CONFIG.MODELTYPE_PATH
     print("Dataset type = {}\n Model = {} ".format(ds,model))
     return ds
-
 
 def initialisation(dataset="default-dataset"):
     """
@@ -59,7 +59,6 @@ def initialisation(dataset="default-dataset"):
               format(pose_pair))
     return pose_pair
 
-
 def set_pose_pair_body_parts(dataset_typ):
     """
     This function is called to set pose details such as POSE_PAIRS
@@ -67,11 +66,6 @@ def set_pose_pair_body_parts(dataset_typ):
     """
     dataset_type_model, BODY_PARTS, POSE_PAIRS = \
         posepoints.setPoseDetails(dataset_typ)
-
-    # The experiment is ran on 1/6th (107229) of the total
-    # number of RGB images in the dataset anon_rgb_training
-    # (643,374)
-    num_qrcodes: int = 107229
 
     print("Total no. of images used during training: ", num_qrcodes)
     print("BODY_PARTS present in a training image:\n{}\n".
@@ -85,17 +79,27 @@ def set_pose_pair_body_parts(dataset_typ):
     print("POSE_PAIRS that connect BODY_PARTS:{}".format(columns))
     l: int = len(columns)
     print("Length of the POSE_PAIR list:{}\n".format(l))
-    return num_qrcodes
-
 
 def load_json():
     """
     Load the training result of the Pose estimation model
     """
+    # Unzip the json file to be analysed
+    zf = ZipFile('anonrgbtrain_poseestimation_ps_posepoints.json.zip', 'r')
+    zf.extractall('.')
+    zf.close()
+    
+
     with open("anonrgbtrain_poseestimation_ps_posepoints.json", "r") as f:
         data = json.load(f)
-    return data
-
+        
+    # The experiment is ran on 1/6th (107229) of the total
+    # number of RGB images in the dataset anon_rgb_training
+    # (643,374)
+    
+    num_of_artifacts = len(data['artifact'])
+    print("No. of artifacts = ",num_of_artifacts)
+    return data, num_of_artifacts
 
 def analyse(data, pose_pair, num_qrcodes):
     """
@@ -161,10 +165,9 @@ def analyse(data, pose_pair, num_qrcodes):
     print("Standard deviation of undetected pose_points = {}\n ".
           format(stdev_values))
 
-
 if __name__ == "__main__":
     dataset_type = load_param_config()
     posepair = initialisation(dataset_type)
-    num_images = set_pose_pair_body_parts(dataset_type)
-    data_to_analyse = load_json()
+    set_pose_pair_body_parts(dataset_type)
+    data_to_analyse,num_images = load_json()
     analyse(data_to_analyse, posepair, num_images)
