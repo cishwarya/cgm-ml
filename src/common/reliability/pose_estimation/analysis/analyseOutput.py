@@ -14,6 +14,8 @@ def load_param_config():
     Loading configuration file containing Model and Dataset type
     """
     ds = DATA_CONFIG.DATASETTYPE_PATH
+    model = DATA_CONFIG.MODELTYPE_PATH
+    print("Dataset type = {}\n Model = {} ".format(ds,model))
     return ds
 
 
@@ -72,7 +74,6 @@ def set_pose_pair_body_parts(dataset_typ):
     num_qrcodes: int = 107229
 
     print("Total no. of images used during training: ", num_qrcodes)
-    print("Dataset type and model: ", dataset_type_model)
     print("BODY_PARTS present in a training image:\n{}\n".
           format(BODY_PARTS))
     df = pd.DataFrame({
