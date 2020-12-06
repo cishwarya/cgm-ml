@@ -20,4 +20,5 @@ Following files are required to run analyseOutput.py:
 Required libraries to run analyseOutput.py:
 - pandas
 
-SampleOutput.txt contains sample output from executing analyseOutput.py
+Tests have been carried on different samples of data and results have been verified. 
+Please refer to SampleOutput.txt for a sample output.
