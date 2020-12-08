@@ -3,7 +3,7 @@ Pre-requisities:
 
 Pretrained CAFFE Pose estimation model is executed on (1/6)th of the samples from the "anon_RGB_training dataset" and 
 the result is stored in a json file. 
-As the original result file is huge, a sample json file with the name "pose_estimation_output.json" is created and uploaded in the same directory as analyseOutput.py
+As the original result file is huge, a sample json file with the name "pose_estimation_output.json" is created and uploaded in the same directory as analyseOutput.py.
 
 The objective of analyseOutput.py script is to analyse pose_estimation_output.json in order to find the missing posepoints and thereby calculating the accuracy.
  
