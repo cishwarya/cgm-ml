@@ -1,3 +1,5 @@
+from src import posepoints
+from src.config import DATA_CONFIG
 import json
 from collections import defaultdict
 from statistics import mean, stdev
@@ -5,8 +7,7 @@ from statistics import mean, stdev
 import pandas as pd
 import sys
 sys.path.append("..") 
-from src import posepoints
-from src.config import DATA_CONFIG
+
 
 def load_param_config():
     """
@@ -14,7 +15,7 @@ def load_param_config():
     """
     ds = DATA_CONFIG.DATASETTYPE_PATH
     model = DATA_CONFIG.MODELTYPE_PATH
-    print("Dataset type = {}\n Model = {} ".format(ds,model))
+    print("Dataset type = {}\n Model = {} ".format(ds, model))
     return ds
 
 def initialisation(dataset="default-dataset"):
@@ -57,7 +58,7 @@ def initialisation(dataset="default-dataset"):
               format(pose_pair))
     return pose_pair
 
-def set_pose_pair_body_parts(dataset_typ):
+def set_pose_pair_body_parts(dataset_typ, num_qrcodes):
     """
     This function is called to set pose details such as POSE_PAIRS
     and BODY_PARTS
@@ -82,16 +83,15 @@ def load_json():
     """
     Load the training result of the Pose estimation model
     """
-
+    
     with open("pose_estimation_output.json", "r") as f:
         data = json.load(f)
-        
+    
     # The experiment is ran on 1/6th (107229) of the total
     # number of RGB images in the dataset anon_rgb_training
     # (643,374)
-    
     num_of_artifacts = len(data['artifact'])
-    print("No. of artifacts = ",num_of_artifacts)
+    print("No. of artifacts = ", num_of_artifacts)
     return data, num_of_artifacts
 
 def analyse(data, pose_pair, num_qrcodes):
@@ -158,9 +158,10 @@ def analyse(data, pose_pair, num_qrcodes):
     print("Standard deviation of undetected pose_points = {}\n ".
           format(stdev_values))
 
+    
 if __name__ == "__main__":
     dataset_type = load_param_config()
     posepair = initialisation(dataset_type)
-    set_pose_pair_body_parts(dataset_type)
-    data_to_analyse,num_images = load_json()
+    data_to_analyse, num_images = load_json()
+    set_pose_pair_body_parts(dataset_type, num_qrcodes)
     analyse(data_to_analyse, posepair, num_images)
