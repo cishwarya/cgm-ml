@@ -83,7 +83,7 @@ def load_json():
     Load the training result of the Pose estimation model
     """
 
-    with open("sample_output.json", "r") as f:
+    with open("pose_estimation_output.json", "r") as f:
         data = json.load(f)
         
     # The experiment is ran on 1/6th (107229) of the total
