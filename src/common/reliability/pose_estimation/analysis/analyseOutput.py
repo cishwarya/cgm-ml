@@ -1,8 +1,6 @@
 import json
 from collections import defaultdict
 from statistics import mean, stdev
-from zipfile import ZipFile
-import os
 
 import pandas as pd
 import sys
@@ -84,13 +82,8 @@ def load_json():
     """
     Load the training result of the Pose estimation model
     """
-    # Unzip the json file to be analysed
-    zf = ZipFile('anonrgbtrain_poseestimation_ps_posepoints.json.zip', 'r')
-    zf.extractall('.')
-    zf.close()
-    
 
-    with open("anonrgbtrain_poseestimation_ps_posepoints.json", "r") as f:
+    with open("sample_output.json", "r") as f:
         data = json.load(f)
         
     # The experiment is ran on 1/6th (107229) of the total
