@@ -156,7 +156,6 @@ def analyse(data, pose_pair, num_qrcodes):
     print("Standard deviation of undetected pose_points = {}\n ".
           format(stdev_values))
 
-
     if __name__ == "__main__":
         dataset_type = load_param_config()
         posepair = initialisation(dataset_type)
